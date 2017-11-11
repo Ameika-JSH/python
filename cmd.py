@@ -1,9 +1,11 @@
 from subprocess import Popen,PIPE,STDOUT
 import sys
-import pickle
-
-rslt = Popen('temp.bat',stdout=PIPE)
 
 
-print(rslt.stdout)
 
+
+path = Popen('temp2.bat',stdout=PIPE).stdout.readlines()[0].decode()
+path = path.split('PATH=')[1].replace('\r\n','').split(';')
+print(path)
+
+    
