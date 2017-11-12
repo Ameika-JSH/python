@@ -3,6 +3,8 @@
 *.js
 *.exe
 *.zip
-ignore/*
+ignore/
 *.vbs
 *.log
+*/__pycache__/
+*/build/
