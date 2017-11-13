@@ -62,7 +62,7 @@ def reRegi(infoStr='git auto pull 대상을 재등록 합니다.\n컴퓨터에�
         exit()
     else:
         print('총 ' + str(len(gitTargets)) + '개의 경로에 대해 git auto pull 작업을 등록합니다.')
-        os.popen('setx ' + env_name + ' ' + str(gitTargets)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\') + ' /m')       
+        os.popen('setx ' + env_name + ' ' + str(gitTargets)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\'))       
 
 cmdList = {'/?':showHelp,'/r':reRegi}
 if __name__ == '__main__':
