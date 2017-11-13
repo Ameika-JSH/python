@@ -14,13 +14,8 @@ def searchGitCmdFolder():
                 gitCmdPath = w[0] + '\\cmd'            
                 break
         if len(gitCmdPath) > 0:
-            print('git 폴더 발견! ( ' + gitCmdPath + ')\n해당 경로를 환경변수에 추가합니다.')
-            
-            vbsStr = 'Set UAC = CreateObject("Shell.Application")\n'
-            vbsStr += 'UAC.ShellExecute "cmd.exe", "/c ' + origin_path + '\\' + batName + '", "", "runas", 1'
-            
-            os.popen('setx GIT_PATH ' + gitCmdPath)
-        
+            print('git 폴더 발견! ( ' + gitCmdPath + ')\n해당 경로를 환경변수에 추가합니다.')            
+            os.popen('setx GIT_PATH ' + gitCmdPath)        
 
 def searchGitFolder():
     mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
@@ -66,26 +61,8 @@ def reRegi(infoStr='git auto pull 대상을 재등록 합니다.\n컴퓨터에�
         print('등록 할 대상이 없습니다.\n프로그램을 종료합니다.')
         exit()
     else:
-        print('총 ' + str(len(gitTargets)) + '개의 경로에 대해 git auto pull 작업을 등록합니다.\n관리자 권한을 얻기위한 UAC가 표시되면 확인을 눌러주세요')
-
-        vbsStr = 'Set UAC = CreateObject("Shell.Application")\n'
-        vbsStr += 'UAC.ShellExecute "cmd.exe", "/c ' + origin_path + '\\' + batName + '", "", "runas", 1'
-
-        f = open('getadmin.vbs','w',-1,'utf-8')
-        f.write(vbsStr)
-        f.close()
-        
-        batHeader = '@echo off\nsetx '
-        batGits = env_name + ' ' + str(gitTargets)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\') + ' /m\n'
-        batFooter = 'del "getadmin.vbs"\ndel "' + batName +'"\n'
-        batFooter += 'exit\n'
-        batFooter += ''      
-        f = open(batName,'w',-1,'utf-8')         
-        f.write(batHeader + batGits + batFooter)
-        f.close()
-
-        time.sleep(1.5)
-        os.popen('getadmin.vbs')
+        print('총 ' + str(len(gitTargets)) + '개의 경로에 대해 git auto pull 작업을 등록합니다.')
+        os.popen('setx ' + env_name + ' ' + str(gitTargets)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\') + ' /m')       
 
 cmdList = {'/?':showHelp,'/r':reRegi}
 if __name__ == '__main__':
@@ -94,11 +71,10 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         gitCmdTest = os.popen('git').read()
         if not gitCmdTest or len(gitCmdTest) == 0:
-            print('git이 설치되어있지 않습니다.\ngit설치경로를 탐색합니다.')
-            
-            print('git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.')            
-            time.sleep(1.5)
+            #print('git이 설치되어있지 않습니다.\ngit설치경로를 탐색합니다.')            
+            print('git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.\n설치후 "설치경로/Git/cmd"를 path환경변수에 추가 해 주세요.')                        
             os.popen('@start http://msysgit.github.com/')
+            input('종료하시려면 엔터키를 눌러주세요...')
         else:
             env_str = os.popen('set ' + env_name).read()
             gitTargets = []
