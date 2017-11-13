@@ -1,7 +1,7 @@
 import os,re,time
 
 def searchGitFolder():
-    mnt = re.findall(r'[d-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
+    mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
     gits = []
     for d in mnt:
         temp = []
@@ -10,10 +10,10 @@ def searchGitFolder():
             if'.git' in w[1]:
                 temp.append(w[0])
         if len(temp) != 0:
-            print(str(temp)[1:-1])
+            for t in temp:
+                print(t)
             gits += temp
         
-    print('검색 결과 : ' + str(gits)[1:-1])
     return gits
 def getDateStr():
     rtn = str(time.localtime().tm_year) + '/'
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         env_str = os.popen('set ' + env_name).read()
         gitTargets = []
         if not env_str:
-            print('git auto pull 대상이 등록되어 있지 않습니다.\n컴퓨터에서 git 폴더를 검색합니다.(수초에서 수분정도 소요됩니다')
+            print('git auto pull 대상이 등록되어 있지 않습니다.\n컴퓨터에서 git 폴더를 검색합니다.(수초에서 수분정도 소요됩니다)')
             gits = searchGitFolder()
             print('git auto pull 대상을 등록합니다.')            
             for git in gits:
