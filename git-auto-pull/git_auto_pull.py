@@ -4,8 +4,26 @@ env_name = 'GIT_AUTO_PULL_PATH'
 batName = 'temp.bat'
 origin_path = os.getcwd()
 
+def searchGitCmdFolder():
+    mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
+    for d in mnt:
+        print(d + '검색 시작...')    
+        gitCmdPath = ''
+        for w in os.walk(d):
+            if(re.match(r'.*\\Git',w[0],re.IGNORECASE) and 'cmd' in w[1]):
+                gitCmdPath = w[0] + '\\cmd'            
+                break
+        if len(gitCmdPath) > 0:
+            print('git 폴더 발견! ( ' + gitCmdPath + ')\n해당 경로를 환경변수에 추가합니다.')
+            
+            vbsStr = 'Set UAC = CreateObject("Shell.Application")\n'
+            vbsStr += 'UAC.ShellExecute "cmd.exe", "/c ' + origin_path + '\\' + batName + '", "", "runas", 1'
+            
+            os.popen('setx GIT_PATH ' + gitCmdPath)
+        
+
 def searchGitFolder():
-    mnt = re.findall(r'[d-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
+    mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
     gits = []
     for d in mnt:
         temp = []
@@ -13,11 +31,10 @@ def searchGitFolder():
         for w in os.walk(d):
             if'.git' in w[1]:
                 temp.append(w[0])
-        if len(temp) != 0:
-            print(str(temp)[1:-1])
+                print(w[0])
+        if len(temp) != 0:             
             gits += temp
         
-    print('검색 결과 : ' + str(gits)[1:-1])
     return gits
 def getDateStr():
     rtn = str(time.localtime().tm_year) + '/'
@@ -77,7 +94,9 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         gitCmdTest = os.popen('git').read()
         if not gitCmdTest or len(gitCmdTest) == 0:
-            print('git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.')
+            print('git이 설치되어있지 않습니다.\ngit설치경로를 탐색합니다.')
+            
+            print('git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.')            
             time.sleep(1.5)
             os.popen('@start http://msysgit.github.com/')
         else:
@@ -92,11 +111,15 @@ if __name__ == '__main__':
             print('등록되어있는 ' + str(len(gitTargets)) + '개의 경로에 대해 git pull을 시작합니다.')
             for gitDir in gitTargets:
                 os.chdir(gitDir)
-                results.append(gitDir + ' - ' + str(os.popen('git pull').readlines()) + '(' + getDateStr() + ' ' + getTimeStr() + ')')
-                print(results[-1])
+                pullMsg = os.popen('git pull').readlines()
+                rsltStr = gitDir + ' - (' + getDateStr() + ' ' + getTimeStr() + ')\n'
+                for p in pullMsg:
+                    rsltStr += p
+                results.append(rsltStr)
+                print(results[-1],end='')
             logStr = ''
             for r in results:
-                logStr += r + '\n'
+                logStr += r
             logPath = origin_path + '\\gitpull.log'
             if input('로그를 남기시겠습니까? ['+logPath+'] (Y or any other)').lower() == 'y':
                 if not os.path.exists(logPath):
