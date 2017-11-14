@@ -104,10 +104,9 @@ def main():
         try:
             while True:
                 time.sleep(1)
-        except KeyboardInterrupt:
-            
+        except KeyboardInterrupt:            
+            observer.stop()
             exit()
-        observer.stop()
         
 if __name__ == '__main__':
     main()
