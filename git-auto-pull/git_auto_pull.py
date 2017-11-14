@@ -48,6 +48,7 @@ def showHelp():
     rtnStr += '==git-auto-pull tool==\n\n'
     rtnStr += '/?    help\n'
     rtnStr += '/r    git path re-registration\n'
+    rtnStr += 'pull, push, fetch    git default command\n'
     print(rtnStr)
 
 def reRegi(infoStr='git auto pull 대상을 재등록 합니다.\n컴퓨터에서 git 폴더를 검색합니다.(수초에서 수분정도 소요됩니다)',gitTargets=[]):
@@ -64,18 +65,31 @@ def reRegi(infoStr='git auto pull 대상을 재등록 합니다.\n컴퓨터에�
         print('총 ' + str(len(gitTargets)) + '개의 경로에 대해 git auto pull 작업을 등록합니다.')
         os.popen('setx ' + env_name + ' ' + str(gitTargets)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\'))       
 
-cmdList = {'/?':showHelp,'/r':reRegi}
+cmdList = {'?':showHelp,'r':reRegi}
+gitCmdList = ['pull','push','fetch']
 if __name__ == '__main__':
     regiMsg = 'git auto pull 대상이 등록되어 있지 않습니다.\n컴퓨터에서 git 폴더를 검색합니다.(수초에서 수분정도 소요됩니다)'
-    
-    if len(sys.argv) == 1:
-        gitCmdTest = os.popen('git').read()
-        if not gitCmdTest or len(gitCmdTest) == 0:
+    gitCmdTest = os.popen('git').read()
+    fileName = sys.argv[0].split('\\')[-1].split('.')[0]
+    cmdArg = ''
+    if not gitCmdTest or len(gitCmdTest) == 0:
             #print('git이 설치되어있지 않습니다.\ngit설치경로를 탐색합니다.')            
-            print('git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.\n설치후 "설치경로/Git/cmd"를 path환경변수에 추가 해 주세요.')                        
+            print('git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.')                        
             os.popen('@start http://msysgit.github.com/')
             input('종료하시려면 엔터키를 눌러주세요...')
-        else:
+    else:
+        if len(sys.argv) == 1:
+            print('명령어 없이 실행하셨습니다. 기본 명령어는 \'fetch\'입니다. 명령어 목록을 보시려면 \'' + fileName + ' ?\'를 입력 해 주세요.')
+            cmdArg = 'fetch'
+        else :
+            if sys.argv[1] in list(cmdList.keys()):
+                cmdList[sys.argv[1]]()
+            elif sys.argv[1] in gitCmdList:
+                cmdArg = sys.argv[1] 
+            else:
+                print('잘못된 인자값 입니다.')
+                showHelp()
+        if len(cmdArg) > 0 :
             env_str = os.popen('set ' + env_name).read()
             gitTargets = []
             if not env_str:
@@ -84,13 +98,11 @@ if __name__ == '__main__':
             if len(gitTargets) == 0:
                 gitTargets += env_str.replace('\n','').split('_PATH=')[1].split(';')
             results = []
-            print('등록되어있는 ' + str(len(gitTargets)) + '개의 경로에 대해 git pull을 시작합니다.')
+            print('등록되어있는 ' + str(len(gitTargets)) + '개의 경로에 대해 git ' + cmdArg + '을 시작합니다.')
             for gitDir in gitTargets:
                 os.chdir(gitDir)
-                pullMsg = os.popen('git pull').readlines()
-                rsltStr = gitDir + ' - (' + getDateStr() + ' ' + getTimeStr() + ')\n'
-                for p in pullMsg:
-                    rsltStr += p
+                gitMsg = os.popen('git ' + cmdArg).read()
+                rsltStr = '[' + cmdArg + '] ' + gitDir + ' - (' + getDateStr() + ' ' + getTimeStr() + ')\n' + gitMsg                
                 results.append(rsltStr)
                 print(results[-1],end='')
             logStr = ''
@@ -108,9 +120,3 @@ if __name__ == '__main__':
                     logStr  = '===============[' + getDateStr() + ']===============\n' + logStr
                 f.write(logStr)
                 f.close()      
-    else:
-        if sys.argv[1] in list(cmdList.keys()):
-            cmdList[sys.argv[1]]()                
-        else:
-            print('잘못된 인자값 입니다.')
-            showHelp()
