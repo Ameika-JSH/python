@@ -4,7 +4,10 @@ from watchdog.events import PatternMatchingEventHandler
 
 def runPyInstaller(file):
     print('####' + file + ' => exe파일로 빌드중...')
-    return os.popen('pyinstaller ' + file + ' -F')
+    options = ' -F'
+    if file.endswith('.pyw'):
+        options += ' -w'
+    return os.popen('pyinstaller ' + file + options)
 
 class fileWatcher(PatternMatchingEventHandler):
     processingPath = []        

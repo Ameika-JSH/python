@@ -1,8 +1,11 @@
 import os,re,time,sys
 
 env_name = 'GIT_AUTO_PULL_PATH'
-batName = 'temp.bat'
 origin_path = os.getcwd()
+
+def print(parent,txt):
+    parent.txtPaths.insert('insert',txt+'\n')
+    
 
 def searchGitCmdFolder():
     mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
@@ -17,16 +20,16 @@ def searchGitCmdFolder():
             print('git 폴더 발견! ( ' + gitCmdPath + ')\n해당 경로를 환경변수에 추가합니다.')            
             os.popen('setx GIT_PATH ' + gitCmdPath)        
 
-def searchGitFolder():
+def searchGitFolder(parent):
     mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
     gits = []
     for d in mnt:
         temp = []
-        print(d + '검색 시작...')
+        print(parent,d + '검색 시작...')
         for w in os.walk(d):
             if'.git' in w[1]:
                 temp.append(w[0])
-                print(w[0])
+                print(parent,w[0])
         if len(temp) != 0:             
             gits += temp
         
@@ -51,7 +54,7 @@ def showHelp():
     rtnStr += 'pull, push, fetch    git default command\n'
     print(rtnStr)
 
-def reRegi(infoStr='git auto pull 대상을 재등록 합니다.\n컴퓨터에서 git 폴더를 검색합니다.(수초에서 수분정도 소요됩니다)',gitTargets=[]):
+def reRegi(gitTargets=[]):
     print(infoStr)
     gits = searchGitFolder()    
     print('git auto pull 대상을 등록합니다.')    
@@ -64,6 +67,9 @@ def reRegi(infoStr='git auto pull 대상을 재등록 합니다.\n컴퓨터에�
     else:
         print('총 ' + str(len(gitTargets)) + '개의 경로에 대해 git auto pull 작업을 등록합니다.')
         os.popen('setx ' + env_name + ' ' + str(gitTargets)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\'))       
+
+def getEnv():
+    return os.popen('set ' + env_name).read()
 
 cmdList = {'?':showHelp,'r':reRegi}
 gitCmdList = ['pull','push','fetch']
@@ -90,7 +96,7 @@ if __name__ == '__main__':
                 print('잘못된 인자값 입니다.')
                 showHelp()
         if len(cmdArg) > 0 :
-            env_str = os.popen('set ' + env_name).read()
+            env_str = getEnv()
             gitTargets = []
             if not env_str:
                 reRegi(regiMsg,gitTargets)
