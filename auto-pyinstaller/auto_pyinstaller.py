@@ -3,19 +3,25 @@ from watchdog.observers import Observer
 from watchdog.events import PatternMatchingEventHandler
 
 def runPyInstaller(file):
-    file = file.split('\\')[-1]
-    print(file + ' => exe파일로 빌드중...')
+    print('####' + file + ' => exe파일로 빌드중...')
     return os.popen('pyinstaller ' + file + ' -F')
 
-class fileWatcher(PatternMatchingEventHandler):    
-    def on_modified(self,event):        
-        time.sleep(0.1)
-        runPyInstaller(event.src_path)
+class fileWatcher(PatternMatchingEventHandler):
+    processingPath = []        
+    def on_modified(self,event):         
         super()
+        if not event.src_path in self.processingPath:
+            self.processingPath.append(event.src_path)            
+            runPyInstaller(event.src_path).close()
+        else:
+            self.processingPath.remove(event.src_path)
+            
+        
 
 def watchPy():
     observer = Observer()
-    observer.schedule(fileWatcher(patterns=["*.py","*.pyw"]), os.getcwd(), recursive=True)
+    fWatcher = fileWatcher(patterns=["*.py","*.pyw"])
+    observer.schedule(fWatcher, os.getcwd(), recursive=True)
     observer.start()
     try:
         while True:
@@ -29,7 +35,7 @@ def installerStarter():
     cnt = 0
     for file in os.listdir():
         if file.endswith('.py'):
-            lastFile = runPyInstaller(file)
+            lastFile = runPyInstaller(os.getcwd() + "\\" + file)
             cnt += 1
     return lastFile,cnt
 
