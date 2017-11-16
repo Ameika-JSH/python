@@ -4,35 +4,23 @@ env_name = 'GIT_AUTO_PULL_PATH'
 origin_path = os.getcwd()
 
 def print(parent,txt):
-    parent.txtPaths.insert('insert',txt+'\n')
-    
-
-def searchGitCmdFolder():
-    mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
-    for d in mnt:
-        print(d + '검색 시작...')    
-        gitCmdPath = ''
-        for w in os.walk(d):
-            if(re.match(r'.*\\Git',w[0],re.IGNORECASE) and 'cmd' in w[1]):
-                gitCmdPath = w[0] + '\\cmd'            
-                break
-        if len(gitCmdPath) > 0:
-            print('git 폴더 발견! ( ' + gitCmdPath + ')\n해당 경로를 환경변수에 추가합니다.')            
-            os.popen('setx GIT_PATH ' + gitCmdPath)        
+    parent.txtPaths.config(state='normal')
+    parent.txtPaths.insert('insert',txt+'\n') 
+    parent.root.update()    
+    parent.txtPaths.config(state='disabled')  
+     
 
 def searchGitFolder(parent):
+    parent.root.title('경로 검색중...')    
     mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
     gits = []
-    spinner = ['/','-','\\', ':']
+    spinner = ['/','-','\\', '|']
     indx = 0
     for d in mnt:
-        parent.txtPaths.insert('2.1',spinner[indx])
-        indx = (indx+1) % 4
-        parent.txtPaths.delete('2.1')
-        parent.root.update()
         temp = []
-        print(parent,d + '검색 시작...')
-        for w in os.walk(d):
+        print(parent,d + '검색 시작...')       
+        for w in os.walk(d):   
+            parent.root.update()
             if'.git' in w[1]:
                 temp.append(w[0])
                 print(parent,w[0])
@@ -52,14 +40,6 @@ def getTimeStr():
     rtn += str(time.localtime().tm_sec)
     return rtn
 
-def showHelp():
-    rtnStr = ''
-    rtnStr += '==git-auto-pull tool==\n\n'
-    rtnStr += '/?    help\n'
-    rtnStr += '/r    git path re-registration\n'
-    rtnStr += 'pull, push, fetch    git default command\n'
-    print(rtnStr)
-
 def reRegi(gitTargets=[]):
     print(infoStr)
     gits = searchGitFolder()    
@@ -77,8 +57,6 @@ def reRegi(gitTargets=[]):
 def getEnv():
     return os.popen('set ' + env_name).read()
 
-cmdList = {'?':showHelp,'r':reRegi}
-gitCmdList = ['pull','push','fetch']
 if __name__ == '__main__':
     regiMsg = 'git auto pull 대상이 등록되어 있지 않습니다.\n컴퓨터에서 git 폴더를 검색합니다.(수초에서 수분정도 소요됩니다)'
     gitCmdTest = os.popen('git').read()
