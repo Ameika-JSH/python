@@ -23,7 +23,13 @@ def searchGitCmdFolder():
 def searchGitFolder(parent):
     mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
     gits = []
+    spinner = ['/','-','\\', ':']
+    indx = 0
     for d in mnt:
+        parent.txtPaths.insert('2.1',spinner[indx])
+        indx = (indx+1) % 4
+        parent.txtPaths.delete('2.1')
+        parent.root.update()
         temp = []
         print(parent,d + '검색 시작...')
         for w in os.walk(d):

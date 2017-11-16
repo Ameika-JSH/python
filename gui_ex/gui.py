@@ -23,7 +23,19 @@ class GuiApp:
 
     def preDoGitAlert(self):
         if askokcancel("확인", str(len(self.env_str)) + "개의 경로에 대해 시작하시겠습니까?"):
-            gtap.searchGitFolder(self)
+            self.root.destroy();
+            mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
+            gits = []
+            for d in mnt:
+                temp = []
+                self.txtPaths.insert(INSERT,parent,d + '검색 시작...')
+                for w in os.walk(d):
+                    if'.git' in w[1]:
+                        temp.append(w[0])
+                        self.txtPaths.insert(INSERT,parent,w[0])
+                if len(temp) != 0:             
+                    gits += temp
+            self.root.mainloop()
             
         
         
