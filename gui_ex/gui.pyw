@@ -3,50 +3,96 @@ from tkinter.ttk import *
 from tkinter.messagebox import *
 import os
 
-import git_auto_pull as gtap
 
-titleText = '자동 git 처리기'
-gits = []
-
-class GuiApp:
+class GuiApp:    
+        
+       
     def __init__(self,root,**kw):
         self.root = root
-        self.env_str = gtap.getEnv()
+        
+        self.titleText = '자동 git 처리기'        
+        self.env_name = 'GIT_AUTO_PULL_PATH'
+        self.origin_path = os.getcwd()
+
+        self.env_str = os.popen('set ' + self.env_name).read()
+        self.gits = []
         if self.env_str != '':
-            gits = self.env_str.replace('\n','').split('_PATH=')[1].split(';')
+            self.gits = self.env_str.replace('\n','').split('_PATH=')[1].split(';')
+            
+        self.mnt =  [ p + ':' for p in re.findall(r'([a-z]):\\',os.popen('mountvol').read(),re.IGNORECASE)]
+        self.mnt.sort()
+        self.mntAllStr = '전체'
+        self.mnt.insert(0,self.mntAllStr)
         self.generate(kw)
+
+    def arrayToString(self,arr,ends='\n'):
+        tempRtn = ''
+        for s in arr:
+            tempRtn += str(s) + ends
+        return tempRtn
+        
 
     def setTxtPaths(self,txtCmd,text,ends='\n'):
         self.txtPaths.config(state=NORMAL)
         self.txtPaths.insert(txtCmd,text + ends)
+        self.root.update()    
         self.txtPaths.config(state=DISABLED)     
+
+    
+    def searchGitFolder(self):
+        self.root.title('경로 검색중...')
+        mnt = []
+        if self.mntCombo.get() == self.mntAllStr:
+            mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
+        else:
+            mnt.append(self.mntCombo.get() + '\\')
+        gits = []
+        indx = 0
+        for d in mnt:
+            temp = []
+            self.setTxtPaths(INSERT,d + '검색 시작...')       
+            for w in os.walk(d):   
+                self.root.update()
+                if'.git' in w[1]:
+                    temp.append(w[0])
+                    self.setTxtPaths(INSERT,w[0])
+            if len(temp) != 0:             
+                gits += temp
+        return gits
 
     def doReRegi(self):
         self.txtPaths.config(state=NORMAL)
         self.txtPaths.delete('1.0',END)
-        self.setTxtPaths(INSERT,'컴퓨터에서 git 폴더를 검색합니다.\n(수초에서 수분정도 소요됩니다)\n')
-        gits = gtap.searchGitFolder(self)
+        self.setTxtPaths(INSERT,str(self.mntCombo.get()) + '경로에서 git 폴더를 검색합니다.\n(수초에서 수분정도 소요됩니다)\n')
+        self.gits = self.searchGitFolder()
         self.setTxtPaths(INSERT,"검색이 완료되었습니다.\n경로 등록작업을 시작합니다.")
-        tempArr = gits.copy()
+        tempArr = self.gits.copy()
         for path in tempArr:
             if not askokcancel('경로추가 확인',path + '\n추가하시겠습니까?'):
-                gits.remove(path)
-        os.popen('setx ' + gtap.env_name + ' ' + str(gits)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\')).read()        
+                self.gits.remove(path)
+        os.popen('setx ' + self.env_name + ' "' + str(self.gits)[1:-1].replace(',',';').replace(' ','').replace('\'','').replace('\\\\','\\') + '"').read()
 
-        self.txtPaths.config(state=NORMAL)
-        self.txtPaths.delete('1.0',END)
-        for path in gits:
-            self.setTxtPaths(INSERT,path)
-        self.root.title(titleText)    
+        if len(self.gits) > 0:
+            showinfo('등록 완료',str(len(self.gits)) + '개의 경로가 등록되었습니다.')
+            self.txtPaths.config(state=NORMAL)
+            self.txtPaths.delete('1.0',END)
+            self.setTxtPaths(INSERT,arrayToString(gits))
+        else:
+            showwarning('등록 실패','등록 할 경로가 없습니다.\n다시 경로 등록 후 사용 해 주세요')
+                
+        self.root.title(self.titleText)    
         
 
     def preDoGitAlert(self):
-        if askokcancel("확인", str(len(gits)) + "개의 경로에 대해 시작하시겠습니까?"):
-            gtap.searchGitFolder(self)
-        print(os.popen('set ' + gtap.env_name).read())
+        if askokcancel("확인", "등록되어있는 " + str(len(self.gits)) + "개의 경로에 대해\ngit " + self.cmdCombo.get() + '작업을 시작하시겠습니까?'):
+            self.searchGitFolder(self)
+        print(os.popen('set ' + self.env_name).read())
         
-    def generate(self,kw):      
-        self.root.title(titleText)        
+    def generate(self,kw):
+        doGitState = NORMAL
+        reRegiText = '경로 재검색'
+                
+        self.root.title(self.titleText)        
 
         pathsLabel = Label(self.root,text='대상 경로')
         pathsLabel.pack()
@@ -58,32 +104,35 @@ class GuiApp:
             showerror('git 미설치','git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.\n\n설치후 "~설치경로~/git/cmd" 경로가 \npath환경변수에 있는지 확인 해 주세요.')                        
             os.popen('@start http://msysgit.github.com/')
             self.root.destroy()
+        elif len(self.gits) < 1:
+            showerror("경고",'등록된 경로가 없습니다.\n경로 등록 후 사용 해 주세요')
+            doGitState = DISABLED
+            reRegiText = '경로 검색'
                     
+        self.mntCombo = Combobox(self.root,values=self.mnt,state="readonly")
+        self.mntCombo.pack()
+        self.mntCombo.current(0)
 
-        btnReRegi = Button(self.root,text='재검색',command=self.doReRegi)
+        btnReRegi = Button(self.root,text=reRegiText,command=self.doReRegi)
         btnReRegi.pack()
 
-        cmdCombo = Combobox(self.root,values=('fetch','pull','push'))
-        cmdCombo.pack()
-        cmdCombo.current(0)
+        self.cmdCombo = Combobox(self.root,values=('fetch','pull','push'),state="readonly")
+        self.cmdCombo.pack()
+        self.cmdCombo.current(0)
 
-        btnDoGit = Button(self.root,text='시작',command=self.preDoGitAlert)
+        btnDoGit = Button(self.root,text='시작',command=self.preDoGitAlert, state=doGitState)
         btnDoGit.pack()
 
-        self.env_str = self.env_str.split(gtap.env_name+'=')[1].split(';')
-        pathsStr = ''
-        for p in self.env_str:
-            pathsStr += p + '\n'
-        
-        self.setTxtPaths(INSERT,pathsStr,'')
-        self.txtPaths.config(state=DISABLED)
-        
-        self.root.mainloop()  
-        
+        self.env_str = self.env_str.split(self.env_name+'=')
+        if len(self.env_str) > 2:
+            self.env_str = self.env_str[1].split(';')
+            pathsStr = arrayToString(self.env_str)
+           
+            self.setTxtPaths(INSERT,pathsStr,'')
+            
+        self.txtPaths.config(state=DISABLED)        
+        self.root.mainloop()          
 
 root = Tk()
 root.geometry("400x500")
-#menubar = Menu(root)
-#menubar.add_command(label='test')
-#root.config(menu=menubar)
 guiApp = GuiApp(root)
