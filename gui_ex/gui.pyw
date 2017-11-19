@@ -61,8 +61,15 @@ class GuiApp:
         return gits
 
     def pathStringToWindow(self,stringArr):
-            pathsStr = self.arrayToString(stringArr)           
-            self.setTxtPaths(INSERT,pathsStr,'')
+        self.txtPaths.config(state=NORMAL)
+        self.txtPaths.delete('1.0',END)    
+        pathsStr = self.arrayToString(stringArr)            
+        self.setTxtPaths(INSERT,pathsStr,'')       
+        
+        if self.txtPaths.count('1.0',END,'displaylines')[0] > 10:
+            scrollPaths = Scrollbar(root,command=self.txtPaths.yview)
+            self.txtPaths.config(yscrollcommand=scrollPaths.set)        
+            scrollPaths.grid(row=1,column=1,sticky='nsew')    
         
 
     def doReRegi(self):
@@ -74,8 +81,6 @@ class GuiApp:
         if len(self.gits) < 1:
             showwarning('결과 없음',str(self.mntCombo.get()) + '경로에 git 폴더가 없습니다.')
             self.gits = preGits.copy()
-            self.txtPaths.config(state=NORMAL)
-            self.txtPaths.delete('1.0',END)
             self.pathStringToWindow(self.gits)
             return
         
@@ -95,14 +100,12 @@ class GuiApp:
         else:
             showwarning('등록 실패','등록 할 경로가 없습니다.\n다시 경로 등록 후 사용 해 주세요')
             self.gits = tempArr.copy()
-            self.txtPaths.config(state=NORMAL)
-            self.txtPaths.delete('1.0',END)
             self.pathStringToWindow(self.gits)
                 
         self.root.title(self.titleText)    
         
 
-    def preDoGitAlert(self):
+    def doGitCommand(self):
         if askokcancel("확인", "등록되어있는 " + str(len(self.gits)) + "개의 경로에 대해\ngit " + self.cmdCombo.get() + '작업을 시작하시겠습니까?'):
             gitResult = ''
             for path in self.gits:
@@ -111,6 +114,17 @@ class GuiApp:
                 gitResult += cmd.read()
                 cmd.close()
             print(gitResult)
+
+    def cmdComboChange(self,event):
+        print(self.cmdCombo.get())
+        if self.cmdCombo.get() == 'commit':
+            self.commitText = Text(self.root,width=55,height=10)
+            self.commitText.grid(row=6,column=0)
+        else:
+            print(self.commitText)
+            self.commitText.destroy()
+        
+        
         
     def generate(self,kw):
         doGitState = NORMAL
@@ -119,11 +133,11 @@ class GuiApp:
         self.root.title(self.titleText)        
 
         pathsLabel = Label(self.root,text='대상 경로')
-        pathsLabel.pack()
+        pathsLabel.grid(row=0,column=0)
 
-        self.txtPaths = Text(self.root)
-        self.txtPaths.config(width = 55,height=20)
-        self.txtPaths.pack()
+        self.txtPaths = Text(self.root,width=55,height=10)
+        self.txtPaths.grid(row=1,column=0,sticky='nsew')    
+        self.pathStringToWindow(self.gits)
         if(os.popen('git').read() == ''):
             showerror('git 미설치','git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.\n\n설치후 "~설치경로~/git/cmd" 경로가 \npath환경변수에 있는지 확인 해 주세요.')                        
             os.popen('@start http://msysgit.github.com/')
@@ -132,27 +146,32 @@ class GuiApp:
             showerror("경고",'등록된 경로가 없습니다.\n경로 등록 후 사용 해 주세요')
             doGitState = DISABLED
             reRegiText = '경로 검색'
-        else:
-            self.pathStringToWindow(self.gits)
-            
+
+        self.txtPaths.config(state=DISABLED)                    
             
         self.mntCombo = Combobox(self.root,values=self.mnt,state="readonly")
-        self.mntCombo.pack()
+        self.mntCombo.grid(row=2,column=0)
         self.mntCombo.current(0)
 
         btnReRegi = Button(self.root,text=reRegiText,command=self.doReRegi)
-        btnReRegi.pack()
+        btnReRegi.grid(row=3,column=0)
 
-        self.cmdCombo = Combobox(self.root,values=('fetch','pull','push'),state="readonly")
-        self.cmdCombo.pack()
+        self.cmdCombo = Combobox(self.root,state="readonly")
+        self.cmdCombo.config(values=('fetch','pull','push','commit'))
+        self.cmdCombo.bind("<<ComboboxSelected>>",self.cmdComboChange)
+        self.cmdCombo.grid(row=4,column=0)
         self.cmdCombo.current(0)
 
-        self.btnDoGit = Button(self.root,text='시작',command=self.preDoGitAlert, state=doGitState)
-        self.btnDoGit.pack()
-            
-        self.txtPaths.config(state=DISABLED)        
-        self.root.mainloop()          
+        self.btnDoGit = Button(self.root,text='시작',command=self.doGitCommand, state=doGitState)
+        self.btnDoGit.grid(row=5,column=0)
+
+        self.commitText = Text(self.root,width=55,height=10)
+
+        self.root.mainloop()
+        exit()
 
 root = Tk()
-root.geometry("400x500")
+#root.geometry("420x410")
+root.resizable(width=False, height=False)
+root.config(pady=10,padx=3)
 guiApp = GuiApp(root)
