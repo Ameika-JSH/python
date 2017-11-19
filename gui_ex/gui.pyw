@@ -125,7 +125,8 @@ class GuiApp:
             for path in self.gits:
                 os.chdir(path)
                 cmd = os.popen('git ' + gitCmd)
-                gitResult += '====' + path + '====\n' + cmd.read().encode('euc-kr').decode()
+                cmdResult = cmd.read()
+                gitResult += '====' + path + '====\n' + cmdResult
                 cmd.close()
             self.resultTxt.config(state=NORMAL)
             self.resultTxt.delete('1.0',END)
