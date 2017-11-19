@@ -29,7 +29,7 @@ class GuiApp:
         tempRtn = ''
         for s in arr:
             tempRtn += str(s) + ends
-        return tempRtn
+        return tempRtn[0:-1]
         
 
     def setTxtPaths(self,txtCmd,text,ends='\n'):
@@ -108,15 +108,17 @@ class GuiApp:
     def doGitCommand(self):
         if askokcancel("확인", "등록되어있는 " + str(len(self.gits)) + "개의 경로에 대해\ngit " + self.cmdCombo.get() + '작업을 시작하시겠습니까?'):
             gitResult = ''
+            gitCmd = self.cmdCombo.get()
+            if gitCmd == 'commit':
+                gitCmd += ' -a -m "' + self.txtPaths.get('1.0',END).replace('\n',' ')
             for path in self.gits:
                 os.chdir(path)
-                cmd = os.popen('git ' + self.cmdCombo.get())
+                cmd = os.popen('git ' + gitCmd)
                 gitResult += cmd.read()
                 cmd.close()
             print(gitResult)
 
-    def cmdComboChange(self,event):
-        print(self.cmdCombo.get())
+    def cmdComboChange(self,event):        
         if self.cmdCombo.get() == 'commit':
             self.commitText = Text(self.root,width=55,height=10)
             self.commitText.grid(row=6,column=0)
