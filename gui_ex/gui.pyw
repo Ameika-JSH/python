@@ -117,7 +117,7 @@ class GuiApp:
                 gitResult += cmd.read()
                 cmd.close()
             resultTxt = Text(self.root,width=55,height=10)
-            resultTxt.inset(INSERT,gitResult)
+            resultTxt.insert(INSERT,gitResult)
             resultTxt.grid(row=7,column=0)
             print(gitResult)
 
