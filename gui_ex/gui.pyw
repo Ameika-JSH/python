@@ -1,4 +1,5 @@
-# This Python file uses the following encoding: utf-8
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 from tkinter import *
 from tkinter.filedialog import *
 from tkinter.ttk import *
