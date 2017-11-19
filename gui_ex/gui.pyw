@@ -60,11 +60,25 @@ class GuiApp:
                 gits += temp
         return gits
 
+    def pathStringToWindow(self,stringArr):
+            pathsStr = self.arrayToString(stringArr)           
+            self.setTxtPaths(INSERT,pathsStr,'')
+        
+
     def doReRegi(self):
         self.txtPaths.config(state=NORMAL)
         self.txtPaths.delete('1.0',END)
         self.setTxtPaths(INSERT,str(self.mntCombo.get()) + '경로에서 git 폴더를 검색합니다.\n(수초에서 수분정도 소요됩니다)\n')
+        preGits = self.gits.copy()
         self.gits = self.searchGitFolder()
+        if len(self.gits) < 1:
+            showwarning('결과 없음',str(self.mntCombo.get()) + '경로에 git 폴더가 없습니다.')
+            self.gits = preGits.copy()
+            self.txtPaths.config(state=NORMAL)
+            self.txtPaths.delete('1.0',END)
+            self.pathStringToWindow(self.gits)
+            return
+        
         self.setTxtPaths(INSERT,"검색이 완료되었습니다.\n경로 등록작업을 시작합니다.")
         tempArr = self.gits.copy()
         for path in tempArr:
@@ -76,17 +90,27 @@ class GuiApp:
             showinfo('등록 완료',str(len(self.gits)) + '개의 경로가 등록되었습니다.')
             self.txtPaths.config(state=NORMAL)
             self.txtPaths.delete('1.0',END)
-            self.setTxtPaths(INSERT,arrayToString(gits))
+            self.btnDoGit.config(state=NORMAL)
+            self.setTxtPaths(INSERT,self.arrayToString(self.gits))
         else:
             showwarning('등록 실패','등록 할 경로가 없습니다.\n다시 경로 등록 후 사용 해 주세요')
+            self.gits = tempArr.copy()
+            self.txtPaths.config(state=NORMAL)
+            self.txtPaths.delete('1.0',END)
+            self.pathStringToWindow(self.gits)
                 
         self.root.title(self.titleText)    
         
 
     def preDoGitAlert(self):
         if askokcancel("확인", "등록되어있는 " + str(len(self.gits)) + "개의 경로에 대해\ngit " + self.cmdCombo.get() + '작업을 시작하시겠습니까?'):
-            self.searchGitFolder(self)
-        print(os.popen('set ' + self.env_name).read())
+            gitResult = ''
+            for path in self.gits:
+                os.chdir(path)
+                cmd = os.popen('git ' + self.cmdCombo.get())
+                gitResult += cmd.read()
+                cmd.close()
+            print(gitResult)
         
     def generate(self,kw):
         doGitState = NORMAL
@@ -108,7 +132,10 @@ class GuiApp:
             showerror("경고",'등록된 경로가 없습니다.\n경로 등록 후 사용 해 주세요')
             doGitState = DISABLED
             reRegiText = '경로 검색'
-                    
+        else:
+            self.pathStringToWindow(self.gits)
+            
+            
         self.mntCombo = Combobox(self.root,values=self.mnt,state="readonly")
         self.mntCombo.pack()
         self.mntCombo.current(0)
@@ -120,15 +147,8 @@ class GuiApp:
         self.cmdCombo.pack()
         self.cmdCombo.current(0)
 
-        btnDoGit = Button(self.root,text='시작',command=self.preDoGitAlert, state=doGitState)
-        btnDoGit.pack()
-
-        self.env_str = self.env_str.split(self.env_name+'=')
-        if len(self.env_str) > 2:
-            self.env_str = self.env_str[1].split(';')
-            pathsStr = arrayToString(self.env_str)
-           
-            self.setTxtPaths(INSERT,pathsStr,'')
+        self.btnDoGit = Button(self.root,text='시작',command=self.preDoGitAlert, state=doGitState)
+        self.btnDoGit.pack()
             
         self.txtPaths.config(state=DISABLED)        
         self.root.mainloop()          
