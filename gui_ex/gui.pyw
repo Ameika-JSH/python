@@ -126,6 +126,7 @@ class GuiApp:
                 os.chdir(path)
                 cmd = os.popen('git ' + gitCmd)
                 cmdResult = cmd.read()
+                print(cmdResult)
                 gitResult += '====' + path + '====\n' + cmdResult
                 cmd.close()
             self.resultTxt.config(state=NORMAL)
