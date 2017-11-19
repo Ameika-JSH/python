@@ -122,11 +122,15 @@ class GuiApp:
             gitCmd = self.cmdCombo.get()
             if gitCmd == 'commit':
                 gitCmd += ' -a -m "' + self.commitText.get('1.0',END).replace('\n',' ').replace('"','\'') + '"'
-            print(gitCmd)
+            
             for path in self.gits:
                 os.chdir(path)
                 cmd = os.popen('git ' + gitCmd)
-                cmdResult = cmd.read()
+                cmdResult = ''
+                try:
+                    cmdResult = cmd.read()
+                except Exception:
+                    cmdResult = '인코딩 문제로 결과를 불러오는데 실패했습니다.'
                 print(cmdResult)
                 gitResult += '====' + path + '====\n' + cmdResult
                 cmd.close()
