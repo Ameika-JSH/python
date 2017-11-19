@@ -119,7 +119,7 @@ class GuiApp:
             gitResult = ''
             gitCmd = self.cmdCombo.get()
             if gitCmd == 'commit':
-                gitCmd += ' -a -m "' + self.txtPaths.get('1.0',END).replace('\n',' ')
+                gitCmd += ' -a -m "' + self.commitText.get('1.0',END).replace('\n',' ')
             print(gitCmd)
             for path in self.gits:
                 os.chdir(path)
@@ -201,7 +201,7 @@ class GuiApp:
         self.commitLabel = Label(self.root,text='commit 코멘트')
         self.commitText = Text(self.root,width=55,height=10)
         
-        self.resultTxt = Text(self.root,width=55,height=10)
+        self.resultTxt = Text(self.root,width=55,height=10,state=DISABLED)
         resultLabel = Label(self.root,text='실행결과')
         resultLogButton = Button(self.root,text='결과저장',command=self.saveLog)
         resultLabel.grid(row=8,column=0)
