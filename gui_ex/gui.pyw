@@ -120,6 +120,7 @@ class GuiApp:
             gitCmd = self.cmdCombo.get()
             if gitCmd == 'commit':
                 gitCmd += ' -a -m "' + self.txtPaths.get('1.0',END).replace('\n',' ')
+            print(gitCmd)
             for path in self.gits:
                 os.chdir(path)
                 cmd = os.popen('git ' + gitCmd)
