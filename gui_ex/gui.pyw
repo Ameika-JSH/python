@@ -1,7 +1,8 @@
 from tkinter import *
+from tkinter.filedialog import *
 from tkinter.ttk import *
 from tkinter.messagebox import *
-import os
+import os,time
 
 
 class GuiApp:    
@@ -24,6 +25,12 @@ class GuiApp:
         self.mntAllStr = '전체'
         self.mnt.insert(0,self.mntAllStr)
         self.generate(kw)
+
+    def getTimeString(self):
+        localTime = time.localtime()
+        rtnStr = '{0}{1}{2}'.format(localTime.tm_year,localTime.tm_mon,localTime.tm_mday)
+        rtnStr += '_{0}{1}{2}'.format(localTime.tm_hour,localTime.tm_min,localTime.tm_sec)
+        return rtnStr
 
     def arrayToString(self,arr,ends='\n'):
         tempRtn = ''
@@ -107,6 +114,8 @@ class GuiApp:
 
     def doGitCommand(self):
         if askokcancel("확인", "등록되어있는 " + str(len(self.gits)) + "개의 경로에 대해\ngit " + self.cmdCombo.get() + '작업을 시작하시겠습니까?'):
+            self.root.title('git ' + self.cmdCombo.get() + ' 실행중...')
+            self.root.config(cursor='wait')
             gitResult = ''
             gitCmd = self.cmdCombo.get()
             if gitCmd == 'commit':
@@ -120,6 +129,8 @@ class GuiApp:
             self.resultTxt.delete('1.0',END)
             self.resultTxt.insert(INSERT,gitResult)
             self.resultTxt.config(state=DISABLED)
+            self.root.title(self.titleText)
+            self.root.config(cursor='')
 
     def cmdComboChange(self,event):        
         if self.cmdCombo.get() == 'commit':
@@ -131,7 +142,21 @@ class GuiApp:
             self.commitText.destroy()
             self.commitLabel.destroy()
         
-        
+
+    def saveLog(self):
+        logPath = asksaveasfilename(defaultextension = True,
+                                    initialdir = self.origin_path,
+                                    initialfile = 'gitLog_' + self.getTimeString(),
+                                    title = "로그 저장",
+                                    filetypes = (("log 파일","*.log"),("모든파일","*.*")))
+        logFile = None
+        if os.path.exists(logPath):
+            logFile = open(logPath,'a',-1,'utf-8')
+        else:
+            logFile = open(logPath,'w',-1,'utf-8')
+        logFile.write(self.resultTxt.get('1.0',END))
+        logFile.close()
+            
         
     def generate(self,kw):
         doGitState = NORMAL
@@ -174,12 +199,13 @@ class GuiApp:
 
         self.commitLabel = Label(self.root,text='commit 코멘트')
         self.commitText = Text(self.root,width=55,height=10)
-
         
         self.resultTxt = Text(self.root,width=55,height=10)
         resultLabel = Label(self.root,text='실행결과')
-        self.resultTxt.grid(row=9,column=0)
+        resultLogButton = Button(self.root,text='결과저장',command=self.saveLog)
         resultLabel.grid(row=8,column=0)
+        self.resultTxt.grid(row=9,column=0)
+        resultLogButton.grid(row=10,column=0)
         
         self.root.mainloop()
         exit()
