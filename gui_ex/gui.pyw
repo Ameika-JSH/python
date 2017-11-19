@@ -1,3 +1,4 @@
+# This Python file uses the following encoding: utf-8
 from tkinter import *
 from tkinter.filedialog import *
 from tkinter.ttk import *
@@ -124,7 +125,7 @@ class GuiApp:
             for path in self.gits:
                 os.chdir(path)
                 cmd = os.popen('git ' + gitCmd)
-                gitResult += '====' + path + '====\n' + cmd.read().encode().decode()
+                gitResult += '====' + path + '====\n' + cmd.read()
                 cmd.close()
             self.resultTxt.config(state=NORMAL)
             self.resultTxt.delete('1.0',END)
