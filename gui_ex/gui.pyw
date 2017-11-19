@@ -118,8 +118,9 @@ class GuiApp:
                 cmd.close()
             resultTxt = Text(self.root,width=55,height=10)
             resultTxt.insert(INSERT,gitResult)
+            resultLabel = Label(self.root,text='실행결과')
             resultTxt.grid(row=7,column=0)
-            print(gitResult)
+            resultLabel.grid(row=8,column=0)
 
     def cmdComboChange(self,event):        
         if self.cmdCombo.get() == 'commit':
