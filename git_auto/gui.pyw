@@ -6,7 +6,6 @@ from tkinter.ttk import *
 from tkinter.messagebox import *
 import os,time
 
-
 class GuiApp:    
         
        
