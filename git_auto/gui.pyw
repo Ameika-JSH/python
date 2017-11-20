@@ -130,10 +130,15 @@ class GuiApp:
                 try:
                     cmdResult = cmd.read()
                 except Exception:
-                    cmdResult = '인코딩 문제로 결과를 불러오는데 실패했습니다.'
-                print(cmdResult)
+                    cmdResult = '인코딩 문제로 결과를 불러오는데 실패했습니다.'                
                 gitResult += '====' + path + '====\n' + cmdResult
+                
+                self.resultTxt.config(state=NORMAL)
+                self.resultTxt.delete('1.0',END)
+                self.resultTxt.insert(INSERT,gitResult)
+                self.resultTxt.config(state=DISABLED)
                 cmd.close()
+                
             self.resultTxt.config(state=NORMAL)
             self.resultTxt.delete('1.0',END)
             self.resultTxt.insert(INSERT,gitResult)
@@ -219,7 +224,7 @@ class GuiApp:
         self.root.mainloop()
 
 root = Tk()
-root.geometry("420x410")
+#root.geometry("420x450")
 root.resizable(width=False, height=False)
 root.config(pady=10,padx=3)
 guiApp = GuiApp(root)
