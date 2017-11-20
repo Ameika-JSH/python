@@ -143,6 +143,11 @@ class GuiApp:
             self.resultTxt.delete('1.0',END)
             self.resultTxt.insert(INSERT,gitResult)
             self.resultTxt.config(state=DISABLED)
+            if self.resultTxt.count('1.0',END,'displaylines')[0] > 10:
+                scrollResult = Scrollbar(root,command=self.resultTxt.yview)
+                self.resultTxt.config(yscrollcommand=scrollResult.set)        
+                scrollResult.grid(row=9,column=1,sticky='nsew')
+            
             self.root.title(self.titleText)
             self.root.config(cursor='')
 
@@ -219,6 +224,7 @@ class GuiApp:
         resultLogButton = Button(self.root,text='결과저장',command=self.saveLog)
         resultLabel.grid(row=8,column=0)
         self.resultTxt.grid(row=9,column=0)
+        
         resultLogButton.grid(row=10,column=0)
         
         self.root.mainloop()
