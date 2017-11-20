@@ -22,8 +22,9 @@ class GuiApp:
         if self.env_str != '':
             self.gits = self.env_str.replace('\n','').split('_PATH=')[1].split(';')
             
-        self.mnt =  [ p + ':' for p in re.findall(r'([a-z]):\\',os.popen('mountvol').read(),re.IGNORECASE)]
+        self.mnt =  [ p + ':\\' for p in re.findall(r'([a-z]):\\',os.popen('mountvol').read(),re.IGNORECASE)]
         self.mnt.sort()
+        print(self.mnt)
         self.mntAllStr = '전체'
         self.mnt.insert(0,self.mntAllStr)
         self.generate(kw)
@@ -44,6 +45,7 @@ class GuiApp:
     def setTxtPaths(self,txtCmd,text,ends='\n'):
         self.txtPaths.config(state=NORMAL)
         self.txtPaths.insert(txtCmd,text + ends)
+        self.txtPaths.see(END)
         self.root.update()    
         self.txtPaths.config(state=DISABLED)     
 
@@ -52,9 +54,9 @@ class GuiApp:
         self.root.title('경로 검색중...')
         mnt = []
         if self.mntCombo.get() == self.mntAllStr:
-            mnt = re.findall(r'[a-z]:\\',os.popen('mountvol').read(),re.IGNORECASE)
+            mnt = self.mnt.copy()
         else:
-            mnt.append(self.mntCombo.get() + '\\')
+            mnt.append(self.mntCombo.get())
         gits = []
         indx = 0
         for d in mnt:
@@ -136,6 +138,7 @@ class GuiApp:
                 self.resultTxt.config(state=NORMAL)
                 self.resultTxt.delete('1.0',END)
                 self.resultTxt.insert(INSERT,gitResult)
+                self.resultTxt.see(END)
                 self.resultTxt.config(state=DISABLED)
                 cmd.close()
                 
@@ -184,10 +187,13 @@ class GuiApp:
         self.root.title(self.titleText)        
 
         pathsLabel = Label(self.root,text='대상 경로')
-        pathsLabel.grid(row=0,column=0)
+        pathsLabel.grid(row=0,column=0,columnspan=2)
+
+        """여백"""
+        Frame(self.root).grid(row=1,column=0,pady=2)
 
         self.txtPaths = Text(self.root,width=55,height=10)
-        self.txtPaths.grid(row=1,column=0,sticky='nsew')    
+        self.txtPaths.grid(row=2,column=0,columnspan=2,sticky='nsew')    
         self.pathStringToWindow(self.gits)
         if(os.popen('git').read() == ''):
             showerror('git 미설치','git이 설치되어있지 않습니다.\n설치페이지로 이동합니다.\n\n설치후 "~설치경로~/git/cmd" 경로가 \npath환경변수에 있는지 확인 해 주세요.')                        
@@ -199,33 +205,52 @@ class GuiApp:
             reRegiText = '경로 검색'
 
         self.txtPaths.config(state=DISABLED)                    
-            
-        self.mntCombo = Combobox(self.root,values=self.mnt,state="readonly")
-        self.mntCombo.grid(row=2,column=0)
+
+        """여백"""
+        Frame(self.root).grid(row=3,column=0,pady=5)
+        
+        """커맨드 프레임 1 ->"""
+        labelWidth = 10
+        selectWidth = 25
+        buttonWidth = 13
+        sbMargin = 1
+        cmdFrame = Frame(self.root,borderwidth=5,relief=GROOVE)        
+
+        Label(cmdFrame,text='경로설정',width=labelWidth).grid(row=0,column=0)
+        self.mntCombo = Combobox(cmdFrame,values=self.mnt,state="readonly",width=selectWidth)
+        self.mntCombo.grid(row=0,column=1)
+        Label(cmdFrame,width=sbMargin).grid(row=0,column=2)
         self.mntCombo.current(0)
 
-        btnReRegi = Button(self.root,text=reRegiText,command=self.doReRegi)
-        btnReRegi.grid(row=3,column=0)
+        btnReRegi = Button(cmdFrame,text=reRegiText,command=self.doReRegi,width=buttonWidth)
+        btnReRegi.grid(row=0,column=3,sticky='e')
+        """"<--------------->"""
 
-        self.cmdCombo = Combobox(self.root,state="readonly")
+        
+        """커맨드 프레임 2 ->"""
+        Label(cmdFrame,text='git커맨드',width=labelWidth).grid(row=1,column=0)
+        self.cmdCombo = Combobox(cmdFrame,state="readonly",width=selectWidth)
         self.cmdCombo.config(values=('fetch','pull','push','commit'))
         self.cmdCombo.bind("<<ComboboxSelected>>",self.cmdComboChange)
-        self.cmdCombo.grid(row=4,column=0)
+        self.cmdCombo.grid(row=1,column=1)
+        Label(cmdFrame,width=sbMargin).grid(row=1,column=2)
         self.cmdCombo.current(0)
 
-        self.btnDoGit = Button(self.root,text='시작',command=self.doGitCommand, state=doGitState)
-        self.btnDoGit.grid(row=5,column=0)
-
+        self.btnDoGit = Button(cmdFrame,text='시작',command=self.doGitCommand, state=doGitState,width=buttonWidth)
+        self.btnDoGit.grid(row=1,column=3)
+        cmdFrame.grid(row=4,column=0,columnspan=2,sticky='nsew')
+        """"<--------------->"""
+        
         self.commitLabel = Label(self.root,text='commit 코멘트')
         self.commitText = Text(self.root,width=55,height=10)
         
         self.resultTxt = Text(self.root,width=55,height=10,state=DISABLED)
         resultLabel = Label(self.root,text='실행결과')
         resultLogButton = Button(self.root,text='결과저장',command=self.saveLog)
-        resultLabel.grid(row=8,column=0)
-        self.resultTxt.grid(row=9,column=0)
+        resultLabel.grid(row=8,column=0,columnspan=2)
+        self.resultTxt.grid(row=9,column=0,columnspan=2)
         
-        resultLogButton.grid(row=10,column=0)
+        resultLogButton.grid(row=10,column=0,columnspan=2)
         
         self.root.mainloop()
 
